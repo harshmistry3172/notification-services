@@ -52,8 +52,11 @@ router.post('/notifications', async (req, res) => {
           await notification.save();
           res.status(500).json({ error: 'Error sending SMS: ' + smsError.message });
         }
-      }  else {
-        // If notification is not email, just return the notification
+      }
+      else if (type === 'in-app') {
+
+      } 
+      else {
         res.status(201).json({ message: 'Notification created with pending status', notification });
       }
   
