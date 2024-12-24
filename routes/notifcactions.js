@@ -2,8 +2,9 @@ const express = require('express');
 const Notification = require('../models/Notification');
 const User = require('../models/User');
 const { sendEmail } = require('../services/emailService');
+const { sendSMS } = require('../services/smsService');
 const router = express.Router();
-
+require('dotenv').config();
 
 // Send Notification to the user
 router.post('/notifications', async (req, res) => {
@@ -16,12 +17,12 @@ router.post('/notifications', async (req, res) => {
         return res.status(404).json({ message: 'User not found' });
       }
   
-      // Create the notification with status 'pending'
+      // Create the notification
       const notification = new Notification({
-        userId: user._id,  // Storing ObjectId of the user
+        userId: user._id,
         type,
         content,
-        status: 'pending',  // Set status to pending
+        status: 'pending',  
       });
       await notification.save();
   
@@ -29,7 +30,6 @@ router.post('/notifications', async (req, res) => {
       if (type === 'email') {
         const subject = content.subject;
         const text = content.text;
-  
         try {
           await sendEmail(user.email, subject, text);
           notification.status = 'sent';
@@ -40,7 +40,19 @@ router.post('/notifications', async (req, res) => {
           await notification.save();
           res.status(500).json({ error: 'Error sending email: ' + emailError.message });
         }
-      } else {
+      }
+      else if (type === 'sms') {  
+        try {
+            // console.log(user.phone, content.text);
+          await sendSMS(user.phone, content.text);
+          notification.status = 'sent';
+          await notification.save();
+          res.status(201).json({ message: 'Notification created and SMS sent successfully', notification });
+        } catch (smsError) {
+          await notification.save();
+          res.status(500).json({ error: 'Error sending SMS: ' + smsError.message });
+        }
+      }  else {
         // If notification is not email, just return the notification
         res.status(201).json({ message: 'Notification created with pending status', notification });
       }
