@@ -43,16 +43,25 @@ router.post('/notifications', async (req, res) => {
 });
 
 
-// Get User Notifications
+// // Get User Notifications
 router.get('/users/:id/notifications', async (req, res) => {
   try {
     const { id } = req.params;
-    const notifications = await Notification.find({ userId: id });
+
+    // Find all notifications for the given user ID
+    const notifications = await Notification.find({userId : id});
+
+    if (!notifications.length) {
+      return res.status(404).json({ message: 'No notifications found for this user.' });
+    }
+
     res.status(200).json(notifications);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
+
+
 
 // Add Sample User Data
 router.post('/users', async (req, res) => {
