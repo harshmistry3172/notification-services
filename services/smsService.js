@@ -2,8 +2,8 @@ require('dotenv').config();
 const twilio = require('twilio');
 
 // Twilio credentials (replace with your actual Account SID and Auth Token)
-const accountSid = process.env.TWILIO_SID; // Replace with your Twilio Account SID
-const authToken = process.env.TWILIO_TOKEN;   // Replace with your Twilio Auth Token
+const accountSid = process.env.TWILIO_SID; 
+const authToken = process.env.TWILIO_TOKEN;
 const client = twilio(accountSid, authToken);
 
 // Send SMS
