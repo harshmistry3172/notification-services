@@ -31,6 +31,10 @@ npm install
 node app.js
 ```
 ### 2. Frontend Setup
+This part is implemented for in-app notification assuming only perticular user will get the notification.
+#### 1. Sample user has to enter his email id to register current socket session id.
+#### 2. Once user is registered, only in-app type of notification will be displayed on the screen
+#### 3. Once user reload the page he has to register again with the email id.
 ```
 git clone https://github.com/harshmistry3172/notification-services-client
 cd notification-services-client
