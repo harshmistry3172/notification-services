@@ -50,7 +50,7 @@ async function runEmailConsumer(io) {
 
   await emailConsumer.run({
     eachMessage: async ({ message }) => {
-      await processNotification(message, 'email', io);  // Pass io to the processNotification function
+      await processNotification(message, 'email', io); 
     },
   });
 }
@@ -62,7 +62,7 @@ async function runSmsConsumer(io) {
 
   await smsConsumer.run({
     eachMessage: async ({ message }) => {
-      await processNotification(message, 'sms', io);  // Pass io to the processNotification function
+      await processNotification(message, 'sms', io);  
     },
   });
 }
@@ -74,7 +74,7 @@ async function runInAppConsumer(io) {
 
   await inappConsumer.run({
     eachMessage: async ({ message }) => {
-      await processNotification(message, 'in-app', io);  // Pass io to the processNotification function
+      await processNotification(message, 'in-app', io);
     },
   });
 }

@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const notificationRoutes = require('./routes/notifcactions');
 const cors = require('cors');
 require('dotenv').config();
-const { initSocket, getIO } = require('./config/socket'); // Import socket initialization
+const { initSocket, getIO } = require('./config/socket');
 const { runEmailConsumer, runSmsConsumer, runInAppConsumer } = require('./kafka/kafkaConsumer');
 const connectDB = require('./config/dbconfig');
 

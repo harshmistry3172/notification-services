@@ -11,10 +11,9 @@ const router = express.Router();
 // Send Notification to the user
 router.post('/notifications', async (req, res) => {
   try {
-    const { userId, type, content } = req.body;
-    console.log(userId, type, content);
+    const { email, type, content } = req.body;
 
-    const user = await User.findOne({ email: userId });
+    const user = await User.findOne({ email: email });
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
