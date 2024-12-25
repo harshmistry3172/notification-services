@@ -8,18 +8,20 @@ const kafka = new Kafka({
 
 const producer = kafka.producer();
 
-async function sendNotificationToKafka(notification) {
+async function sendNotificationToKafka(notification, type) {
+  const topic = type === 'email' ? process.env.EMAIL_TOPIC : process.env.SMS_TPOIC; // Choose the correct topic
+  console.log(topic);
   await producer.connect();
   try {
     await producer.send({
-      topic: process.env.KAFKA_TOPIC, 
+      topic,
       messages: [
         {
           value: JSON.stringify(notification),
         },
       ],
     });
-    console.log('Notification sent to Kafka');
+    console.log(`Notification sent to Kafka topic: ${topic}`);
   } catch (err) {
     console.error('Error sending notification to Kafka:', err);
   }

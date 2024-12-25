@@ -12,36 +12,43 @@ router.post('/notifications', async (req, res) => {
   try {
     const { userId, type, content } = req.body;
 
-    // Find the user to get their email or phone
     const user = await User.findOne({ email: userId });
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Create the notification object
     const notification = new Notification({
       userId: user._id,
       type,
       content,
-      status: 'pending',  
+      status: 'pending',
     });
-    
-    await notification.save();
 
-    // Send the notification to Kafka
-    await sendNotificationToKafka({
+    await notification.save();
+    console.log({
       userId: user._id,
       type,
       content,
       status: 'pending',
-      _id: notification._id,  // Include the notification ID for later status update
+      _id: notification._id,
     });
+    await sendNotificationToKafka(
+      {
+        userId: user._id,
+        type,
+        content,
+        status: 'pending',
+        _id: notification._id,
+      },
+      type // Pass type to determine the Kafka topic
+    );
 
     res.status(201).json({ message: 'Notification created and enqueued for processing', notification });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
+
 
 // Get User Notifications
 router.get('/users/:id/notifications', async (req, res) => {
