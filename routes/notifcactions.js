@@ -5,12 +5,14 @@ const User = require('../models/User');
 const sendNotificationToKafka = require('../kafka/kafkaProducer'); // Import Kafka producer
 const { sendEmail } = require('../services/emailService');
 const { sendSMS } = require('../services/smsService');
+const { sendInAppNotification } = require('../services/inAppNotifyService');
 const router = express.Router();
 
 // Send Notification to the user
 router.post('/notifications', async (req, res) => {
   try {
     const { userId, type, content } = req.body;
+    console.log(userId, type, content);
 
     const user = await User.findOne({ email: userId });
     if (!user) {
@@ -25,13 +27,6 @@ router.post('/notifications', async (req, res) => {
     });
 
     await notification.save();
-    console.log({
-      userId: user._id,
-      type,
-      content,
-      status: 'pending',
-      _id: notification._id,
-    });
     await sendNotificationToKafka(
       {
         userId: user._id,
@@ -39,14 +34,12 @@ router.post('/notifications', async (req, res) => {
         content,
         status: 'pending',
         _id: notification._id,
-      },
-      type // Pass type to determine the Kafka topic
+      }, type
     );
-
     res.status(201).json({ message: 'Notification created and enqueued for processing', notification });
   } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+   res.status(500).json({ error: error.message });
+ }
 });
 
 
@@ -77,6 +70,32 @@ router.post('/users', async (req, res) => {
     await user.save();
 
     res.status(201).json({ message: 'User added successfully.', user });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update socket id in User Data
+router.put('/users/:email/socketId', async (req, res) => {
+  try {
+    const { email } = req.params;
+    const { socketId } = req.body;
+
+    if (!socketId) {
+      return res.status(400).json({ message: 'socketId is required' });
+    }
+
+    // Find the user by email
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Update socketId
+    user.socketId = socketId;
+    await user.save();
+
+    res.status(200).json({ message: 'Socket ID updated successfully', user });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

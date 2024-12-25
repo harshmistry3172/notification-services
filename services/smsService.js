@@ -14,7 +14,6 @@ const sendSMS = async (to, body) => {
       from: process.env.TWILIO_NUMBER, 
       to: to,
     });
-    console.log('SMS sent');
   } catch (error) {
     console.error('Error sending SMS:', error);
     throw new Error('Failed to send SMS');

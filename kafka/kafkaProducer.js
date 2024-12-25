@@ -9,8 +9,10 @@ const kafka = new Kafka({
 const producer = kafka.producer();
 
 async function sendNotificationToKafka(notification, type) {
-  const topic = type === 'email' ? process.env.EMAIL_TOPIC : process.env.SMS_TPOIC; // Choose the correct topic
-  console.log(topic);
+  const topic = type === 'email' ? process.env.EMAIL_TOPIC : 
+              type === 'sms' ? process.env.SMS_TOPIC : 
+              process.env.IN_APP_TOPIC;
+
   await producer.connect();
   try {
     await producer.send({

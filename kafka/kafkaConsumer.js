@@ -3,8 +3,8 @@ const { sendEmail } = require('../services/emailService');
 const { sendSMS } = require('../services/smsService');
 const Notification = require('../models/Notification');
 const User = require('../models/User');
-const mongoose = require('mongoose');
-require('dotenv').config();
+const { sendInAppNotification } = require('../services/inAppNotifyService');
+const { getIO } = require('../config/socket');
 
 const kafka = new Kafka({
   clientId: 'notification-service',
@@ -13,15 +13,9 @@ const kafka = new Kafka({
 
 const emailConsumer = kafka.consumer({ groupId: 'email-consumers' });
 const smsConsumer = kafka.consumer({ groupId: 'sms-consumers' });
+const inappConsumer = kafka.consumer({ groupId: 'inapp-consumers' });
 
-const dbUri = process.env.MONGO_URI;
-mongoose
-  .connect(dbUri)
-  .then(() => console.log('Connected to MongoDB Atlas'))
-  .catch((err) => console.error('Error connecting to MongoDB Atlas:', err));
-
-// Generic function to process notifications
-async function processNotification(message, type) {
+async function processNotification(message, type, io) {
   const notification = JSON.parse(message.value.toString());
   const { userId, content } = notification;
   const user = await User.findById(userId);
@@ -37,6 +31,8 @@ async function processNotification(message, type) {
       await sendEmail(user.email, content.subject, content.text);
     } else if (type === 'sms') {
       await sendSMS(user.phone, content.text);
+    } else {
+      await sendInAppNotification(user.socketId,content.text,io)
     }
     status = 'sent';
 
@@ -48,29 +44,39 @@ async function processNotification(message, type) {
 }
 
 // Run Email Consumer
-async function runEmailConsumer() {
+async function runEmailConsumer(io) {
   await emailConsumer.connect();
-  await emailConsumer.subscribe({ topics:[ process.env.EMAIL_TOPIC], fromBeginning: true });
+  await emailConsumer.subscribe({ topics: [process.env.EMAIL_TOPIC], fromBeginning: true });
 
   await emailConsumer.run({
     eachMessage: async ({ message }) => {
-      await processNotification(message, 'email');
+      await processNotification(message, 'email', io);  // Pass io to the processNotification function
     },
   });
 }
 
 // Run SMS Consumer
-async function runSmsConsumer() {
+async function runSmsConsumer(io) {
   await smsConsumer.connect();
-  await smsConsumer.subscribe({ topics: [process.env.SMS_TPOIC], fromBeginning: true });
+  await smsConsumer.subscribe({ topics: [process.env.SMS_TOPIC], fromBeginning: true });
 
   await smsConsumer.run({
     eachMessage: async ({ message }) => {
-      await processNotification(message, 'sms');
+      await processNotification(message, 'sms', io);  // Pass io to the processNotification function
     },
   });
 }
 
-// Start Consumers
-runEmailConsumer().catch(console.error);
-runSmsConsumer().catch(console.error);
+// Run In-App Consumer
+async function runInAppConsumer(io) {
+  await inappConsumer.connect();
+  await inappConsumer.subscribe({ topics: [process.env.IN_APP_TOPIC], fromBeginning: true });
+
+  await inappConsumer.run({
+    eachMessage: async ({ message }) => {
+      await processNotification(message, 'in-app', io);  // Pass io to the processNotification function
+    },
+  });
+}
+
+module.exports = { runEmailConsumer, runSmsConsumer, runInAppConsumer };
